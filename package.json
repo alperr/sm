@@ -1,0 +1,15 @@
+{
+  "name": "sketch-manager",
+  "version": "0.0.1",
+  "repository": "github:alperr/sm",
+  "bin": {
+    "sm": "./bin/sm"
+  },
+  "dependencies": {
+    "express": "4.17.1",
+    "portscanner": "2.2.0"
+  },
+  "scripts": {
+    "pub": "cp sm.js ./bin/sm && git add -A && git commit -m 'npm release' && git push && npm publish"
+  }
+}
