@@ -1,0 +1,108 @@
+<!DOCTYPE html><html><head><title>Draw</title><meta charset="UTF-8" /><script src="draw.js"></script>
+<style> body{ margin: 0; } .container { font-family: sans-serif; text-align: center; }
+.excalidraw-wrapper { height: 100vh;  width: 100vw; margin: 0;  position: relative; }
+</style></head>
+<body><div class="container"><div id="app"></div></div><script>
+
+function xhr(action, data, onload)
+{
+	var x = new XMLHttpRequest();
+	x.open("POST", "http://localhost:4040/" + action);
+
+
+	var body = 
+	{
+		"a": 1
+	};
+
+	x.send(JSON.stringify(body));
+	x.onload = onload;
+}
+
+const App = () =>
+{
+	const excalidrawRef = React.useRef(null);
+	const excalidrawWrapperRef = React.useRef(null);
+	const [dimensions, setDimensions] = React.useState({
+		width: undefined,
+		height: undefined
+	});
+
+	React.useEffect(() => 
+	{
+		setDimensions({
+			width: excalidrawWrapperRef.current.getBoundingClientRect().width,
+			height: excalidrawWrapperRef.current.getBoundingClientRect().height
+		});
+
+		const onResize = () =>
+		{
+			setDimensions({
+				width: excalidrawWrapperRef.current.getBoundingClientRect().width,
+				height: excalidrawWrapperRef.current.getBoundingClientRect().height
+			});
+
+			var id = localStorage.getItem("current-drawing");
+			if (id == null)
+				return;
+
+			xhr("GET", {"id": id }, function(data, err)
+			{
+				updateScene(data);
+			})
+		};
+
+		window.addEventListener("keydown", function(e)
+		{
+			// ctrl-s
+			if (e.keyCode == 83 && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey))
+			{
+				var elements = excalidrawRef.current.getSceneElements();
+				var app = excalidrawRef.current.getAppState();
+				console.log(elements);
+				console.log(app);
+				var canvas = document.getElementById("canvas");
+				canvas.toBlob(function(blob)
+				{
+					var url = URL.createObjectURL(blob)
+					console.log(url);
+					alert("saved");
+				})
+
+				e.stopPropagation();
+				e.preventDefault();
+				return false;
+			}
+		})
+		window.addEventListener("resize", onResize);
+		return () => window.removeEventListener("resize", onResize);
+	}, [excalidrawWrapperRef]);
+
+	const updateScene = (data) =>
+	{
+		//const sceneData = {
+		//	elements: [],
+		//	appState: {}
+		//};
+		excalidrawRef.current.updateScene(data);
+	};
+
+	return React.createElement(React.Fragment, null,
+		React.createElement("div",
+		{
+			className: "excalidraw-wrapper",
+			ref: excalidrawWrapperRef
+		},
+		React.createElement(Excalidraw.default, {
+			ref: excalidrawRef,
+			width: dimensions.width,
+			height: dimensions.height
+		})
+		)
+	);
+};
+
+const excalidrawWrapper = document.getElementById("app");
+ReactDOM.render(React.createElement(App), excalidrawWrapper);
+
+</script></body></html>
