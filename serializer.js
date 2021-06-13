@@ -1,13 +1,14 @@
 // run this when assets are changed
 
 const FS = require("fs");
-var wk = FS.readFileSync("./wk.js", "utf8");
-var lines = wk.split("\n");
+var app = FS.readFileSync("./app.js", "utf8");
+var lines = app.split("\n");
 
 var map =
 {
-	"const SOURCE_LIST = "		: "list.html",
+	"const SOURCE_DRAW_JS = "	: "draw.js",
 	"const SOURCE_DRAW = " 		: "draw.html",
+	"const SOURCE_BOOTSTRAP = "	: "bootstrap.css"
 }
 
 for (var i in lines)
@@ -24,4 +25,4 @@ for (var i in lines)
 }
 
 var out = lines.join("\n");
-FS.writeFileSync("sm.js", out, "utf8");
+FS.writeFileSync("app.js", out, "utf8");

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="bootstrap.css">
+</head>
+<body>
+	<div class="container mt-2">
+		<h3>Sketch Manager</h3>
+	</div>
+<script>
+
+
+function xhr(method, action, data, onload)
+{
+	var x = new XMLHttpRequest();
+	x.open(method,"http://localhost:4040/api/" + action);
+	x.send();
+	x.onload = function()
+	{
+		onload(x.responseText);
+	}
+}
+
+function main()
+{
+	xhr("GET", "list","", function(data)
+	{
+		data = JSON.parse(data)
+		console.log(data);
+	})
+}
+
+window.onload = main;
+
+
+</script>
+
+</body>
+</html>
