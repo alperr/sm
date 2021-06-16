@@ -118,7 +118,7 @@ function onfile(q, res, token, req)
 	var map = 
 	{
 		"/bootstrap.css": [SOURCE_BOOTSTRAP,"text/css"],
-		"/list": [SOURCE_LIST,"text/html"],
+		"/": [SOURCE_LIST,"text/html"],
 		"/draw": [SOURCE_DRAW,"text/html"],
 		"/draw.js": [SOURCE_DRAW_JS,"text/javascript"]
 	}
@@ -196,13 +196,25 @@ function ondelete(q, res)
 function start()
 {
 	if (!FS.existsSync("./data/"))
+	{
 		FS.mkdirSync("./data/");
+		console.log("created folder " + "./data/")
+	}
+		
 
 	if (!FS.existsSync("./raster/"))
+	{
 		FS.mkdirSync("./raster/");
+		console.log("created folder " + "./raster/")
+	}
+		
 
 	if (!FS.existsSync("./data.json"))
+	{
 		FS.writeFileSync("./data.json","{}","utf8");
+		console.log("created file " + "./data.json")
+	}
+
 
 	H.enable_cors();
 	H.get("/api/get", onget);
