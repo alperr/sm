@@ -8,6 +8,7 @@ var map =
 {
 	"const SOURCE_DRAW_JS = "	: "draw.js",
 	"const SOURCE_DRAW = " 		: "draw.html",
+	"const SOURCE_LIST = " 		: "list.html",
 	"const SOURCE_BOOTSTRAP = "	: "bootstrap.css"
 }
 

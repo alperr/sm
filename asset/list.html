@@ -6,12 +6,30 @@
 	<title>Document</title>
 	<link rel="stylesheet" href="bootstrap.css">
 </head>
-<body>
+<body class="bg-light">
 	<div class="container mt-2">
-		<h3>Sketch Manager</h3>
+		<!--<div class="row">
+			<h3>Sketch Manager</h3>
+		</div>-->
+		<div class="row content">
+
+			<!--<table class="table">
+				<tbody class="content">
+
+				</tbody>
+			</table>-->
+		</div>
+		<hr>
+		<div class="row">
+			<div class="col">
+				<button class="btn btn-primary btn-lg create"> + Create a new sketch</button>
+			</div>
+			
+		</div>
 	</div>
 <script>
 
+var $ = document.querySelector;
 
 function xhr(method, action, data, onload)
 {
@@ -20,17 +38,126 @@ function xhr(method, action, data, onload)
 	x.send();
 	x.onload = function()
 	{
-		onload(x.responseText);
+		onload(x.responseText);	
+	}
+}
+
+function create()
+{
+	var x = new XMLHttpRequest();
+	x.open("GET", "http://localhost:4040/api/create");
+	x.send();
+	x.onload = function()
+	{
+		window.location.reload();
+	}
+}
+
+function assign_delete(id)
+{
+	return function() {
+		var x = new XMLHttpRequest();
+		x.open("POST", "http://localhost:4040/api/delete");
+		x.send(JSON.stringify({
+			"id": id,
+		}));
+		x.onload = function()
+		{
+			window.location.reload();
+		}
+	}
+}
+
+function assign_update(id, input)
+{
+	return function() {
+		var x = new XMLHttpRequest();
+		x.open("POST", "http://localhost:4040/api/update");
+		x.send(JSON.stringify({
+			"id": id,
+			"name": input.value
+		}));
+		x.onload = function()
+		{
+			window.location.reload();
+		}
+	}
+}
+
+function assign_draw(id)
+{
+	return function() {
+		localStorage.setItem("current-drawing", id)
+		window.location = "/draw";
 	}
 }
 
 function main()
 {
+	document.querySelector(".create").onclick = create;
+
 	xhr("GET", "list","", function(data)
 	{
-		data = JSON.parse(data)
-		console.log(data);
+		data = JSON.parse(data);
+		render(data);
 	})
+}
+
+function render(data)
+{
+	var content = document.querySelector(".content");
+	for (var key in data)
+	{
+		
+		var tr = document.createElement("tr");
+		
+		
+		var td = document.createElement("td");
+		td.innerHTML = `<img style="object-fit:cover; width: 240px; height: 240px;" src="http://localhost:4040/raster/${key}.png">`
+		tr.appendChild(td);
+
+		var td = document.createElement("div");
+		td.className = "col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mt-4 "
+		td.innerHTML =
+		`
+			<div class="bg-white p-1 border"> 
+				<div class="row text-center">
+					<div class="col">
+						<img class="w-100" style="object-fit:cover; height: 120px;" src="http://localhost:4040/raster/${key}.png">
+					</div>
+				</div>
+				<div class="row">
+					<div class="input-group w-100 mt-2">
+						<input class="form-control form-control-sm" type="text" value="${data[key]}">
+						<button class="btn btn-outline-secondary btn-sm update">Update</button>
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col">
+						<div class="mt-2">
+							<a class="btn btn-sm btn-outline-secondary" href="http://localhost:4040/raster/${key}.png" target="_blank">
+								PNG
+							</a>
+							<button class="btn btn-sm btn-outline-secondary draw">Draw</button>
+							<button class="btn btn-sm btn-danger delete">Delete</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		`
+		var input = td.querySelector(".form-control");
+		var update_btn = td.querySelector(".update");
+		var delete_btn = td.querySelector(".delete");
+		var draw_btn = td.querySelector(".draw");
+
+		delete_btn.onclick = assign_delete(key);
+		update_btn.onclick = assign_update(key, input);
+		draw_btn.onclick = assign_draw(key);
+		td.querySelector("img").onclick = assign_draw(key);
+
+		content.appendChild(td);
+	}
 }
 
 window.onload = main;

@@ -4,19 +4,111 @@
 </style></head>
 <body><div class="container"><div id="app"></div></div><script>
 
-function xhr(action, data, onload)
+function get(id, onload)
 {
 	var x = new XMLHttpRequest();
-	x.open("POST", "http://localhost:4040/" + action);
+	x.open("GET", "http://localhost:4040/api/get?id="+id);
+	x.send();
+	x.onload = function()
+	{
+		onload(x.responseText);
+	};
+}
 
+function save(data, raster, onload)
+{
+	var x = new XMLHttpRequest();
+	x.open("POST", "http://localhost:4040/api/update");
 
 	var body = 
 	{
-		"a": 1
+		"id": localStorage.getItem("current-drawing"),
+		"data": JSON.stringify(data),
+		"raster": raster
 	};
 
 	x.send(JSON.stringify(body));
 	x.onload = onload;
+}
+
+function bin_to_hex(bin)
+{
+	var hex = "";
+	for (var i=0;i<bin.length;i++)
+	{
+		var b = bin[i];
+		var number = (b).toString(16).toUpperCase();
+		if( (number.length % 2) > 0 )
+			number = "0" + number;
+		hex += number;
+	}
+	return hex;
+}
+
+
+function crop(c)
+{
+	var PADDING = 10;
+	var ctx = canvas.getContext("2d")
+	var data = ctx.getImageData(0,0,c.width, c.height).data;
+	var start = 0;
+
+	var minx = 99999;
+	var miny = 99999;
+	var maxx = 0;
+	var maxy = 0;
+	for (var i=0;i<data.length/4;i++)
+	{
+		var r = data[i*4+0];
+		var g = data[i*4+1];
+		var b = data[i*4+2];
+		var x =i % c.width;
+		var y = Math.floor(i / c.width);
+
+		if (r != 255 && g != 255 && b != 255)
+		{
+			if (x < minx) minx = x;
+			if (y < miny) miny = y;
+
+			if (x > maxx) maxx = x;
+			if (y > maxy) maxy = y;
+
+		}
+	}
+
+	minx = minx - PADDING;
+	miny = miny - PADDING;
+	maxx = maxx + PADDING;
+	maxy = maxy + PADDING;
+
+	if (minx < 0)	minx = 0;
+	if (miny < 0)	miny = 0;
+	if (maxx > c.width)	maxx = c.width;
+	if (maxy > c.height)	maxy = c.height;
+
+	var dx = maxx - minx;
+	var dy = maxy - miny;
+
+	var out = document.createElement("canvas")
+	out.width = dx;
+	out.height = dy;
+	var out_ctx = out.getContext("2d")
+
+	out_ctx.drawImage(c, minx, miny, dx, dy, 0, 0, dx, dy);
+	console.log(dx, dy);
+	console.log(minx, miny, maxx, maxy);
+	return out;
+}
+
+function hex_to_bin(hex)
+{
+	var bin = new Uint8Array(hex.length / 2);
+	for (var i=0;i<hex.length/2;i++)
+	{
+		var h = hex[i*2] + hex[i*2+1];
+		bin[i] = parseInt(h, 16);
+	}
+	return bin;
 }
 
 const App = () =>
@@ -35,21 +127,25 @@ const App = () =>
 			height: excalidrawWrapperRef.current.getBoundingClientRect().height
 		});
 
+		var id = localStorage.getItem("current-drawing");
+		if (id == null)
+			return;
+
+		get(id, function(data, err)
+		{
+			data = JSON.parse(data);
+			data.collaborators = new Map();
+			data.appState.width = 1920;
+			data.appState.height = 1080;
+			updateScene(data);
+		});
+
 		const onResize = () =>
 		{
 			setDimensions({
 				width: excalidrawWrapperRef.current.getBoundingClientRect().width,
 				height: excalidrawWrapperRef.current.getBoundingClientRect().height
 			});
-
-			var id = localStorage.getItem("current-drawing");
-			if (id == null)
-				return;
-
-			xhr("GET", {"id": id }, function(data, err)
-			{
-				updateScene(data);
-			})
 		};
 
 		window.addEventListener("keydown", function(e)
@@ -59,15 +155,20 @@ const App = () =>
 			{
 				var elements = excalidrawRef.current.getSceneElements();
 				var app = excalidrawRef.current.getAppState();
-				console.log(elements);
-				console.log(app);
 				var canvas = document.getElementById("canvas");
+				canvas = crop(canvas);
 				canvas.toBlob(function(blob)
 				{
-					var url = URL.createObjectURL(blob)
-					console.log(url);
-					alert("saved");
-				})
+					blob.arrayBuffer().then(function(buffer)
+					{
+						var raster = bin_to_hex(new Uint8Array(buffer))
+						save({"elements":elements, "appState": app}, raster, function()
+						{
+							console.log("saved");
+						})
+					});
+				}, "image/png");
+
 
 				e.stopPropagation();
 				e.preventDefault();
@@ -80,10 +181,6 @@ const App = () =>
 
 	const updateScene = (data) =>
 	{
-		//const sceneData = {
-		//	elements: [],
-		//	appState: {}
-		//};
 		excalidrawRef.current.updateScene(data);
 	};
 
