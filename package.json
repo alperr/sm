@@ -2,15 +2,10 @@
   "name": "sketch-manager",
   "version": "0.0.1",
   "repository": "github:alperr/sm",
-  "bin": {
-    "sm": "./bin/sm"
-  },
   "dependencies": {
-    "nano-http": "0.2.2",
-    "portscanner": "2.2.0",
-    "cheerio": "1.0.0-rc.10"
+    "nano-http": "0.2.2"
   },
   "scripts": {
-    "pub": "cp sm.js ./bin/sm && git add -A && git commit -m 'npm release' && git push && npm publish"
+    "pub": "cp app.js ./bin/sm && git add -A && git commit -m 'npm release' && git push && npm publish"
   }
 }
