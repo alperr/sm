@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "repository": "github:alperr/sm",
   "dependencies": {
-    "nano-http": "0.2.2"
+    "http": "github:nlibs/http"
   },
   "scripts": {
     "pub": "cp app.js ./bin/sm && git add -A && git commit -m 'npm release' && git push && npm publish"
